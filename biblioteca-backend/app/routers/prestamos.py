@@ -5,6 +5,7 @@ from typing import List
 
 from .. import models, schemas
 from ..database import get_db
+from ..dependencies import get_current_user
 
 router = APIRouter(prefix="/api/prestamos", tags=["prestamos"])
 
@@ -29,7 +30,7 @@ def _to_schema(p: models.Prestamo) -> schemas.PrestamoOut:
 
 
 @router.get("/", response_model=List[schemas.PrestamoOut])
-def listar_prestamos(db: Session = Depends(get_db)):
+def listar_prestamos(db: Session = Depends(get_db), _: str = Depends(get_current_user)):
     prestamos = (
         db.query(models.Prestamo)
         .order_by(models.Prestamo.fecha_prestamo.desc())
@@ -39,7 +40,7 @@ def listar_prestamos(db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=schemas.PrestamoOut, status_code=201)
-def crear_prestamo(data: schemas.PrestamoCreate, db: Session = Depends(get_db)):
+def crear_prestamo(data: schemas.PrestamoCreate, db: Session = Depends(get_db), _: str = Depends(get_current_user)):
     prestamo = models.Prestamo(
         id=data.id,
         visitante_id=data.visitanteId,
@@ -58,7 +59,7 @@ def crear_prestamo(data: schemas.PrestamoCreate, db: Session = Depends(get_db)):
 
 
 @router.patch("/{prestamo_id}/devolver", response_model=schemas.PrestamoOut)
-def devolver_prestamo(prestamo_id: str, db: Session = Depends(get_db)):
+def devolver_prestamo(prestamo_id: str, db: Session = Depends(get_db), _: str = Depends(get_current_user)):
     prestamo = db.query(models.Prestamo).filter(models.Prestamo.id == prestamo_id).first()
     if not prestamo:
         raise HTTPException(status_code=404, detail="Préstamo no encontrado")
@@ -70,7 +71,7 @@ def devolver_prestamo(prestamo_id: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/{prestamo_id}")
-def eliminar_prestamo(prestamo_id: str, db: Session = Depends(get_db)):
+def eliminar_prestamo(prestamo_id: str, db: Session = Depends(get_db), _: str = Depends(get_current_user)):
     prestamo = db.query(models.Prestamo).filter(models.Prestamo.id == prestamo_id).first()
     if not prestamo:
         raise HTTPException(status_code=404, detail="Préstamo no encontrado")

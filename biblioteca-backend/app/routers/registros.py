@@ -5,6 +5,7 @@ from typing import List
 
 from .. import models, schemas
 from ..database import get_db
+from ..dependencies import get_current_user
 
 router = APIRouter(prefix="/api/registros", tags=["registros"])
 
@@ -26,7 +27,7 @@ def _to_schema(r: models.Registro) -> schemas.RegistroOut:
 
 
 @router.get("/", response_model=List[schemas.RegistroOut])
-def listar_registros(db: Session = Depends(get_db)):
+def listar_registros(db: Session = Depends(get_db), _: str = Depends(get_current_user)):
     registros = (
         db.query(models.Registro)
         .order_by(models.Registro.fecha_hora.desc())
@@ -53,14 +54,14 @@ def crear_registro(data: schemas.RegistroCreate, db: Session = Depends(get_db)):
 
 
 @router.delete("/limpiar")
-def limpiar_registros(db: Session = Depends(get_db)):
+def limpiar_registros(db: Session = Depends(get_db), _: str = Depends(get_current_user)):
     db.query(models.Registro).delete()
     db.commit()
     return {"ok": True}
 
 
 @router.delete("/{registro_id}")
-def eliminar_registro(registro_id: str, db: Session = Depends(get_db)):
+def eliminar_registro(registro_id: str, db: Session = Depends(get_db), _: str = Depends(get_current_user)):
     registro = db.query(models.Registro).filter(models.Registro.id == registro_id).first()
     if not registro:
         raise HTTPException(status_code=404, detail="Registro no encontrado")

@@ -10,6 +10,7 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     ok: bool
     mensaje: str
+    token: str
 
 
 class CambiarPasswordRequest(BaseModel):
